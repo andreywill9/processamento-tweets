@@ -1,13 +1,10 @@
 from typing import List
 
 import pandas
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
-# LIMPEZA
-
-termos_candidatos = {
-    'Lula': ['lula', 'luiz inacio lula da silva'],
-    'Bolsonaro': ['bolsonaro', 'jair messias bolsonaro']
-}
 
 def obter_tags(texto_tweet: str) -> List[str]:
     tags_tweet = []
@@ -15,6 +12,21 @@ def obter_tags(texto_tweet: str) -> List[str]:
         if any(map((lambda termo: termo in texto_tweet), termos)):
             tags_tweet.append(candidato)
     return tags_tweet
+
+# LIMPEZA
+
+termos_candidatos = {
+    'Lula': ['lula', 'luiz inacio lula da silva'],
+    'Bolsonaro': ['bolsonaro', 'jair messias bolsonaro'],
+    'Ciro': ['ciro', 'ciro gomes'],
+    'Simone Tebet': ['tebet', 'simone tebet'],
+    'Eymael': ['eymael', 'eymael o democrata cristao'],
+    'Sofia Manzano': ['sofia manzano', 'manzano pcb'],
+    'Soraya Thronicke': ['soraya thronicke', 'soraya união brasil'],
+    'Felipe D’Avila': ['felipe davila', 'felipe davila novo'],
+    'Vera Lúcia': ['vera lucia','vera lucia pstu'],
+    'Leo Péricles': ['leo pericles', 'leonardo pericles']
+}
 
 
 dataframe = pandas.read_excel('bases/base-menor.xlsx')
@@ -36,4 +48,22 @@ dataframe['semana_analise'] = dataframe['semana_ano'] - 22
 
 dataframe['tags'] = dataframe['texto'].map(obter_tags)
 
-dataframe.to_excel('bases/base-menor-tratada.xlsx')
+
+def mostrar_contagem_citacoes() -> None:
+    todas_citacoes = {}
+    for candidato in termos_candidatos.keys():
+        contagem = 0
+        if candidato not in todas_citacoes:
+            todas_citacoes[candidato] = 0
+        for tags in dataframe.tags:
+            if candidato in tags:
+                contagem += 1
+        todas_citacoes[candidato] = contagem
+    todas_citacoes = {k: v for k, v in todas_citacoes.items() if v > 0}
+
+    plt.pie(todas_citacoes.values(), labels=todas_citacoes.keys())
+    plt.show()
+
+
+mostrar_contagem_citacoes()
+
