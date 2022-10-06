@@ -3,6 +3,7 @@ from typing import List
 import pandas
 import matplotlib
 matplotlib.use('TkAgg')
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 # LIMPEZA
@@ -31,8 +32,6 @@ dataframe['texto'] = dataframe.texto.str\
 dataframe['data_tweet'] = pandas.to_datetime(dataframe['data_tweet'])\
     .dt.tz_localize(None)
 
-print(dataframe.head())
-
 dataframe['mes'] = dataframe['data_tweet'].dt.month
 
 dataframe['semana_ano'] = dataframe['data_tweet'].map(lambda data: int(data.strftime("%V")))
@@ -44,21 +43,15 @@ for chave, valor in termos_candidatos.items():
     dataframe[chave] = dataframe['texto'].str.contains(pat=fr'(?:{termos_regex.lower()})', case=False).map({True: 1,
                                                                                                             False: 0})
 
-dataframe.to_excel('bases/base-menor-tratada.xlsx')
+
+def mostrar_contagem_citacoes() -> None:
+    df = pandas.melt(dataframe, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
+    print(df)
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    grafico.set_xlabel('Candidato')
+    grafico.set_ylabel('Número de citações')
+    plt.show()
 
 
-# def mostrar_contagem_citacoes() -> None:
-#     todas_citacoes = {}
-#     for candidato in termos_candidatos.keys():
-#         contagem = 0
-#         if candidato not in todas_citacoes:
-#             todas_citacoes[candidato] = 0
-#         for tags in dataframe.tags:
-#             if candidato in tags:
-#                 contagem += 1
-#         todas_citacoes[candidato] = contagem
-#     todas_citacoes = {k: v for k, v in todas_citacoes.items() if v > 0}
-#
-#     plt.pie(todas_citacoes.values(), labels=todas_citacoes.keys())
-#     plt.show()
+mostrar_contagem_citacoes()
 
