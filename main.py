@@ -46,12 +46,32 @@ for chave, valor in termos_candidatos.items():
 
 def mostrar_contagem_citacoes() -> None:
     df = pandas.melt(dataframe, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
-    print(df)
     grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações')
     plt.show()
+    plt.close()
+
+
+def mostrar_citacoes_por_mes() -> None:
+    df = pandas.DataFrame(columns=['semana', 'candidato', 'quantidade'])
+    semanas_analise = dataframe['semana_analise'].unique()
+    for semana in semanas_analise:
+        for candidato in termos_candidatos.keys():
+            df2 = dataframe.query(f'semana_analise == {semana} & {candidato} == 1')
+            quantidade = len(df2.index)
+            df = pandas.concat([df, pandas.DataFrame.from_records([{
+                'semana': semana,
+                'candidato': candidato,
+                'quantidade': quantidade
+            }])])
+    df3 = df.pivot(index='semana', columns='candidato', values='quantidade')
+    df3.plot()
+    plt.xlabel('Semana')
+    plt.ylabel('Número de citações')
+    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
+    plt.show()
 
 
 mostrar_contagem_citacoes()
-
+mostrar_citacoes_por_mes()
