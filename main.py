@@ -21,7 +21,7 @@ termos_candidatos = {
     'leo_pericles': ['leo pericles', 'leonardo pericles']
 }
 
-dataframe = pandas.read_excel('bases/base-menor.xlsx')
+dataframe = pandas.read_excel('bases/base-completa.xlsx')
 
 dataframe['texto'] = dataframe.texto.str\
     .lower()\
@@ -73,5 +73,31 @@ def mostrar_citacoes_por_mes() -> None:
     plt.show()
 
 
+def mostrar_rival_natural() -> None:
+    df = pandas.DataFrame(columns=['candidatos', 'citacoes'])
+    df.set_index('candidatos')
+    for candidato in termos_candidatos.keys():
+        for candidato2 in termos_candidatos.keys():
+            combinacao = f'{candidato} e {candidato2}'
+            combinacao_invertida = f'{candidato2} e {candidato}'
+            if candidato == candidato2 or combinacao in df.candidatos.values or combinacao_invertida in df.candidatos.values:
+                continue
+            df2 = dataframe.query(f'{candidato} == 1 & {candidato2} == 1')
+            contagem = len(df2.index)
+            df = pandas.concat([df, pandas.DataFrame.from_records([{
+                'candidatos': f'{candidato} e {candidato2}',
+                'citacoes': contagem
+            }])])
+    df = df.sort_values(by='citacoes', ascending=False, ignore_index=True)
+    df = df[:5]
+    df.set_index('candidatos', inplace=True)
+    df.plot(kind='barh')
+    plt.xlabel('Número de citações')
+    plt.ylabel('Rivais')
+    plt.xticks(rotation=0, horizontalalignment="center")
+    plt.show()
+
+
 mostrar_contagem_citacoes()
 mostrar_citacoes_por_mes()
+mostrar_rival_natural()
