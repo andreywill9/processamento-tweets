@@ -1,35 +1,154 @@
-from typing import List
-
 import pandas
 import matplotlib
+
 matplotlib.use('TkAgg')
-import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import CountVectorizer
+from wordcloud import WordCloud
+import nltk
+from nltk import tokenize
+import seaborn as sns
+import re
+import unidecode
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
+import spacy
+from string import punctuation
+
+nltk.download('movie_reviews')
+nltk.download('punkt')
+
+nlp = spacy.load("pt_core_news_lg")
+
+token_espaco = tokenize.WhitespaceTokenizer()
 
 # LIMPEZA
 
 termos_candidatos = {
-    'lula': ['lula', 'luiz inacio lula da silva'],
-    'bolsonaro': ['bolsonaro', 'jair messias bolsonaro'],
-    'ciro': ['ciro', 'ciro gomes'],
-    'simone_tebet': ['tebet', 'simone tebet'],
-    'eymael': ['eymael', 'eymael o democrata cristao'],
-    'sofia_manzano': ['sofia manzano', 'manzano pcb'],
-    'soraya_thronicke': ['soraya thronicke', 'soraya união brasil'],
-    'felipe_d_avila': ['felipe davila', 'felipe davila novo'],
-    'vera_lucia': ['vera lucia','vera lucia pstu'],
-    'leo_pericles': ['leo pericles', 'leonardo pericles']
+    'lula': ['lula', 'luiz inacio lula da silva', '@lulaoficial'],
+    'bolsonaro': ['bolsonaro', 'jair messias bolsonaro', '@jairbolsonaro'],
+    'ciro': ['ciro', 'ciro gomes', '@cirogomes'],
+    'simone_tebet': ['tebet', 'simone tebet', '@simonetebetbr'],
+    'eymael': ['eymael', 'eymael o democrata cristao', '@eymaelpr2022'],
+    'sofia_manzano': ['sofia manzano', 'manzano pcb', '@sofiamanzanopcb'],
+    'soraya_thronicke': ['soraya thronicke', 'soraya união brasil', '@sorayathronicke'],
+    'felipe_d_avila': ['felipe davila', 'felipe davila novo', '@fdavilaoficial'],
+    'vera_lucia': ['vera lucia', 'vera lucia pstu', '@verapstu'],
+    'leo_pericles': ['leo pericles', 'leonardo pericles', '@leopericlesup']
 }
 
-dataframe = pandas.read_excel('bases/base-completa.xlsx')
+arroba_candidato = {'@lulaoficial': 'lula',
+                    '@jairbolsonaro': 'bolsonaro',
+                    '@cirogomes': 'ciro',
+                    '@simonetebetbr': 'simone_tebet',
+                    '@eymaelpr2022': 'eymael',
+                    '@sofiamanzanopcb': 'sofia_manzano',
+                    '@sorayathronicke': 'soraya_thronicke',
+                    '@fdavilaoficial': 'felipe_d_avila',
+                    '@verapstu': 'vera_lucia',
+                    '@leopericlesup': 'leo_pericles'}
 
-dataframe['texto'] = dataframe.texto.str\
-    .lower()\
-    .replace(r'[^\w\s@]', '', regex=True)\
-    .replace(r'[\n | \t]', ' ', regex=True)\
+abreviacoes = {
+    'vc': 'voce',
+    'vcs': 'voces',
+    'pq': 'porque',
+    'pra': 'para',
+    'pro': 'para o',
+    'q': 'que',
+    'mn': 'mano',
+    'blz': 'beleza',
+    'pdc': 'pode crer',
+    'gnt': 'gente',
+    'mds': 'meu deus',
+    'vlw': 'valeu',
+    'hj': 'hoje',
+    'tar': 'estar',
+    'lix': 'lixo',
+    'nd': 'nada',
+    'pfv': 'por favor',
+    'hrs': 'horas',
+    'aq': 'aqui',
+    'pft': 'perfeito',
+    'glr': 'galera',
+    'clr': 'celular',
+    'n': 'nao',
+    's': 'sim',
+    'ctz': 'certeza',
+    'dps': 'depois',
+    'dnv': 'denovo',
+    'msm': 'mesmo',
+    'sla': 'sei la',
+    'ngm': 'ninguem',
+    'p': 'para'
+}
+
+stopwords = nltk.corpus.stopwords.words("portuguese")
+palavras_irrelevantes = [*punctuation] + stopwords
+token_pontuacao = tokenize.WordPunctTokenizer()
+
+dataframe = pandas.read_excel('bases/base-menor.xlsx')
+
+dataframe['texto'] = dataframe.texto.str \
+    .lower() \
+    .replace(r'[^\w\s@]', '', regex=True) \
     .replace(r'[\s]+', ' ', regex=True)
 
-dataframe['data_tweet'] = pandas.to_datetime(dataframe['data_tweet'])\
+frases_processadas = list()
+for opiniao in dataframe["texto"]:
+    nova_frase = list()
+    palavras_texto = token_pontuacao.tokenize(opiniao)
+    for palavra in palavras_texto:
+        nova_frase.extend(abreviacoes[palavra].split(' ') if palavra in abreviacoes.keys() else [palavra])
+    frases_processadas.append(' '.join(nova_frase))
+dataframe['texto'] = frases_processadas
+
+mencoes_candidatos = list()
+candidatos = list()
+
+tweets_tratados = list()
+for opiniao in dataframe.texto:
+    mencoes_tweet = re.findall("@[A-Za-z0-9_]+", opiniao)
+    outras_mencoes = list(filter((lambda x: x not in arroba_candidato), mencoes_tweet))
+
+    for mencao in outras_mencoes:
+        opiniao = opiniao.replace(mencao, '')
+    for arroba in arroba_candidato.keys():
+        opiniao = opiniao.replace(arroba, arroba_candidato[arroba])
+
+    nova_frase = list()
+    palavras_texto = token_espaco.tokenize(opiniao)
+    for palavra in palavras_texto:
+        if palavra not in stopwords:
+            nova_frase.append(palavra)
+    tweets_tratados.append(' '.join(nova_frase))
+
+dataframe["tratamento_1"] = tweets_tratados
+
+sem_acentos = [unidecode.unidecode(texto) for texto in dataframe["tratamento_1"]]
+dataframe["tratamento_2"] = sem_acentos
+
+frases_processadas = list()
+for opiniao in dataframe["tratamento_2"]:
+    nova_frase = list()
+    palavras_texto = token_pontuacao.tokenize(opiniao)
+    for palavra in palavras_texto:
+        if palavra not in palavras_irrelevantes:
+            nova_frase.append(palavra)
+    frases_processadas.append(' '.join(nova_frase))
+
+dataframe["tratamento_2"] = frases_processadas
+
+frases_processadas = list()
+for opiniao in dataframe["tratamento_2"]:
+    nova_frase = list()
+    doc = nlp(opiniao)
+    for palavra in doc:
+        nova_frase.append(palavra.lemma_.lower())
+    frases_processadas.append(' '.join(nova_frase))
+
+dataframe["tratamento_3"] = frases_processadas
+
+dataframe['data_tweet'] = pandas.to_datetime(dataframe['data_tweet']) \
     .dt.tz_localize(None)
 
 dataframe['mes'] = dataframe['data_tweet'].dt.month
@@ -98,6 +217,35 @@ def mostrar_rival_natural() -> None:
     plt.show()
 
 
+def mostrar_grafico_palavras(quantidade):
+    todas_palavras = ' '.join([texto for texto in dataframe['tratamento_3']])
+    token_frase = token_espaco.tokenize(todas_palavras)
+    frequencia = nltk.FreqDist(token_frase)
+    df_frequencia = pandas.DataFrame({"palavra": list(frequencia.keys()), "frequencia": list(frequencia.values())})
+    df_frequencia.nlargest(columns="frequencia", n=quantidade)
+    df_frequencia = df_frequencia.nlargest(columns="frequencia", n=10)
+    plt.figure(figsize=(12, 8))
+    ax = sns.barplot(data=df_frequencia, x="palavra", y="frequencia")
+    ax.set(ylabel="Contagem")
+    plt.show()
+
+
+def mostrar_nuvem_palavras():
+    todas_palavras = ' '.join([texto for texto in dataframe.tratamento_3])
+    nuvem_palavras = WordCloud(width=1500,
+                               height=800,
+                               max_font_size=200,
+                               collocations=False).generate(todas_palavras)
+
+    plt.figure(figsize=(10, 7))
+    plt.imshow(nuvem_palavras, interpolation='bilinear')
+    plt.axis("off")
+    plt.show()
+
+
 mostrar_contagem_citacoes()
 mostrar_citacoes_por_mes()
 mostrar_rival_natural()
+mostrar_grafico_palavras(10)
+mostrar_nuvem_palavras()
+
