@@ -3,7 +3,6 @@ import matplotlib
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer
 from wordcloud import WordCloud
 import nltk
 from nltk import tokenize
@@ -89,7 +88,7 @@ stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
 
-dataframe = pandas.read_excel('bases/base-completa.xlsx')
+dataframe = pandas.read_excel('bases/base-menor.xlsx')
 
 
 def tratar_base():
@@ -207,8 +206,28 @@ def mostrar_grafico_palavras(quantidade):
     plt.show()
 
 
+def aplicar_analise_sentimentos():
+    nv = NaiveBayesAnalyzer()
+    dataframe['porcentagem_positiva'] = dataframe['texto_tratado']\
+        .map(lambda texto: TextBlob(texto, analyzer=nv).sentiment.p_pos)
+    dataframe['sentimento'] = dataframe['porcentagem_positiva']\
+        .map(obter_sentimento)
+
+
+def obter_sentimento(porcentagem_positiva):
+    if 0 <= porcentagem_positiva <= 0.20:
+        return 1
+    if 0.20 < porcentagem_positiva <= 0.40:
+        return 2
+    if 0.40 < porcentagem_positiva <= 0.60:
+        return 3
+    if 0.60 < porcentagem_positiva <= 0.80:
+        return 4
+    return 5
+
+
 def mostrar_nuvem_palavras():
-    todas_palavras = ' '.join([texto for texto in dataframe.tratamento_3])
+    todas_palavras = ' '.join([texto for texto in dataframe.texto_tratado])
     nuvem_palavras = WordCloud(width=1500,
                                height=800,
                                max_font_size=200,
@@ -230,31 +249,22 @@ def mostrar_tweets_unicos_ou_conjunto():
     plt.show()
 
 
-def aplicar_analise_sentimentos():
-    nv = NaiveBayesAnalyzer()
-    dataframe['porcentagem_positiva'] = dataframe['texto_tratado']\
-        .map(lambda texto: TextBlob(texto, analyzer=nv).sentiment.p_pos)
-    dataframe['sentimento'] = dataframe['porcentagem_positiva']\
-        .map(obter_sentimento)
-
-
-def obter_sentimento(porcentagem_positiva):
-    if 0 <= porcentagem_positiva <= 0.20:
-        return 1
-    if 0.20 < porcentagem_positiva <= 0.40:
-        return 2
-    if 0.40 < porcentagem_positiva <= 0.60:
-        return 3
-    if 0.60 < porcentagem_positiva <= 0.80:
-        return 4
-    return 5
+def mostrar_mais_tweets_positivos():
+    dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & sentimento > 3')
+    df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    grafico.set_xlabel('Candidato')
+    grafico.set_ylabel('Número de citações positivas')
+    plt.show()
+    plt.close()
 
 
 tratar_base()
 aplicar_analise_sentimentos()
-# mostrar_contagem_citacoes()
-# mostrar_citacoes_por_mes()
-# mostrar_rival_natural()
-# mostrar_grafico_palavras(10)
-# mostrar_nuvem_palavras()
-# mostrar_tweets_unicos_ou_conjunto()
+mostrar_contagem_citacoes()
+mostrar_citacoes_por_mes()
+mostrar_rival_natural()
+mostrar_grafico_palavras(10)
+mostrar_nuvem_palavras()
+mostrar_tweets_unicos_ou_conjunto()
+mostrar_mais_tweets_positivos()
