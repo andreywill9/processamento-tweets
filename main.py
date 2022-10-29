@@ -259,6 +259,16 @@ def mostrar_mais_tweets_positivos():
     plt.close()
 
 
+def mostrar_mais_tweets_negativos():
+    dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & sentimento < 3')
+    df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    grafico.set_xlabel('Candidato')
+    grafico.set_ylabel('Número de citações negativas')
+    plt.show()
+    plt.close()
+
+
 tratar_base()
 aplicar_analise_sentimentos()
 mostrar_contagem_citacoes()
@@ -268,3 +278,4 @@ mostrar_grafico_palavras(10)
 mostrar_nuvem_palavras()
 mostrar_tweets_unicos_ou_conjunto()
 mostrar_mais_tweets_positivos()
+mostrar_mais_tweets_negativos()
