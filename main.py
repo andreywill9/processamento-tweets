@@ -230,7 +230,28 @@ def mostrar_tweets_unicos_ou_conjunto():
     plt.show()
 
 
-# tratar_base()
+def aplicar_analise_sentimentos():
+    nv = NaiveBayesAnalyzer()
+    dataframe['porcentagem_positiva'] = dataframe['texto_tratado']\
+        .map(lambda texto: TextBlob(texto, analyzer=nv).sentiment.p_pos)
+    dataframe['sentimento'] = dataframe['porcentagem_positiva']\
+        .map(obter_sentimento)
+
+
+def obter_sentimento(porcentagem_positiva):
+    if 0 <= porcentagem_positiva <= 0.20:
+        return 1
+    if 0.20 < porcentagem_positiva <= 0.40:
+        return 2
+    if 0.40 < porcentagem_positiva <= 0.60:
+        return 3
+    if 0.60 < porcentagem_positiva <= 0.80:
+        return 4
+    return 5
+
+
+tratar_base()
+aplicar_analise_sentimentos()
 # mostrar_contagem_citacoes()
 # mostrar_citacoes_por_mes()
 # mostrar_rival_natural()
