@@ -88,7 +88,7 @@ stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
 
-dataframe = pandas.read_excel('bases/base-menor.xlsx')
+dataframe = pandas.read_excel('bases/base-completa.xlsx')
 
 
 def tratar_base():
@@ -148,7 +148,7 @@ def mostrar_contagem_citacoes() -> None:
     plt.close()
 
 
-def mostrar_citacoes_por_mes() -> None:
+def mostrar_citacoes_por_semana() -> None:
     df = pandas.DataFrame(columns=['semana', 'candidato', 'quantidade'])
     semanas_analise = dataframe['semana_analise'].unique()
     for semana in semanas_analise:
@@ -269,13 +269,35 @@ def mostrar_mais_tweets_negativos():
     plt.close()
 
 
+def mostrar_tweets_positivos_por_semana() -> None:
+    dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & sentimento > 3')
+    df = pandas.DataFrame(columns=['semana', 'candidato', 'quantidade'])
+    semanas_analise = dataframe_filtrado['semana_analise'].unique()
+    for semana in semanas_analise:
+        for candidato in termos_candidatos.keys():
+            df2 = dataframe_filtrado.query(f'semana_analise == {semana} & {candidato} == 1')
+            quantidade = len(df2.index)
+            df = pandas.concat([df, pandas.DataFrame.from_records([{
+                'semana': semana,
+                'candidato': candidato,
+                'quantidade': quantidade
+            }])])
+    df3 = df.pivot(index='semana', columns='candidato', values='quantidade')
+    df3.plot()
+    plt.xlabel('Semana')
+    plt.ylabel('Número de citações')
+    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
+    plt.show()
+
+
 tratar_base()
 aplicar_analise_sentimentos()
 mostrar_contagem_citacoes()
-mostrar_citacoes_por_mes()
+mostrar_citacoes_por_semana()
 mostrar_rival_natural()
 mostrar_grafico_palavras(10)
 mostrar_nuvem_palavras()
 mostrar_tweets_unicos_ou_conjunto()
 mostrar_mais_tweets_positivos()
 mostrar_mais_tweets_negativos()
+mostrar_tweets_positivos_por_semana()
