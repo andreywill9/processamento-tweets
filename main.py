@@ -79,7 +79,10 @@ abreviacoes = {
     'msm': 'mesmo',
     'sla': 'sei la',
     'ngm': 'ninguem',
-    'p': 'para'
+    'p': 'para',
+    'mt': 'muito',
+    'mto': 'muito',
+    'mta': 'muita'
 }
 
 stopwords = nltk.corpus.stopwords.words("portuguese")
@@ -101,6 +104,8 @@ def tratar_base():
         outras_mencoes = list(filter((lambda x: x not in arroba_candidato), mencoes_tweet))
         palavras_texto = token_pontuacao.tokenize(opiniao)
         for palavra in palavras_texto:
+            if re.match(r'^(k|ha|rs|lol|he)+', palavra):
+                continue
             if palavra in outras_mencoes or palavra in stopwords:
                 continue
             if palavra in arroba_candidato:
@@ -225,11 +230,10 @@ def mostrar_tweets_unicos_ou_conjunto():
     plt.show()
 
 
-tratar_base()
+# tratar_base()
 # mostrar_contagem_citacoes()
 # mostrar_citacoes_por_mes()
 # mostrar_rival_natural()
 # mostrar_grafico_palavras(10)
 # mostrar_nuvem_palavras()
 # mostrar_tweets_unicos_ou_conjunto()
-
