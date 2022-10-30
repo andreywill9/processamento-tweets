@@ -102,7 +102,8 @@ def tratar_base():
         mencoes_tweet = re.findall("@[A-Za-z0-9_]+", opiniao)
         outras_mencoes = list(filter((lambda x: x not in arroba_candidato), mencoes_tweet))
         palavras_texto = token_pontuacao.tokenize(opiniao)
-        for palavra in palavras_texto:
+        palavras_texto2 = opiniao.split(' ')
+        for palavra in palavras_texto2:
             if re.match(r'^(k|ha|rs|lol|he)+', palavra):
                 continue
             if palavra in outras_mencoes or palavra in stopwords:
