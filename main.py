@@ -88,7 +88,7 @@ stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
 
-dataframe = pandas.read_excel('bases/base-completa.xlsx')
+dataframe = pandas.read_excel('bases/turno_2.xlsx')
 
 
 def tratar_base():
@@ -101,12 +101,11 @@ def tratar_base():
         nova_frase = list()
         mencoes_tweet = re.findall("@[A-Za-z0-9_]+", opiniao)
         outras_mencoes = list(filter((lambda x: x not in arroba_candidato), mencoes_tweet))
-        palavras_texto = token_pontuacao.tokenize(opiniao)
         palavras_texto2 = opiniao.split(' ')
         for palavra in palavras_texto2:
             if re.match(r'^(k|ha|rs|lol|he)+', palavra):
                 continue
-            if palavra in outras_mencoes or palavra in stopwords:
+            if palavra in outras_mencoes or palavra in stopwords or set(abreviacoes[palavra].split(' ') if palavra in abreviacoes.keys() else [palavra]).issubset(stopwords):
                 continue
             if palavra in arroba_candidato:
                 nova_frase.append(arroba_candidato[palavra])
@@ -291,7 +290,16 @@ def mostrar_tweets_positivos_por_semana() -> None:
     plt.show()
 
 
+def mostrar_palavras_mais_usadas():
+    todas_palavras = ' '.join([texto for texto in dataframe['texto_tratado']])
+    token_frase = token_espaco.tokenize(todas_palavras)
+    frequencia = nltk.FreqDist(token_frase)
+    df_frequencia = pandas.DataFrame({"palavra": list(frequencia.keys()), "frequencia": list(frequencia.values())})
+    df_frequencia.to_excel('bases/palavras-mais-usadas.xlsx')
+
+
 tratar_base()
+mostrar_palavras_mais_usadas()
 aplicar_analise_sentimentos()
 mostrar_contagem_citacoes()
 mostrar_citacoes_por_semana()
