@@ -579,10 +579,10 @@ def mostrar_grafico_palavras(quantidade):
     plt.show()
 
 
-def aplicar_analise_sentimentos(teste):
+def aplicar_analise_sentimentos():
     polaridade_tweets = []
     nomes_candidatos = itertools.chain.from_iterable(termos_candidatos.values())
-    for tweet in teste:
+    for tweet in dataframe['texto_tratado']:
         pontuacao_tweet = 0
         palavras = tweet.split()
         quantidade_mencoes = len(list(filter(lambda x: x in nomes_candidatos, palavras)))
@@ -709,9 +709,6 @@ def mostrar_volumetria_classificacao(candidato):
     plt.show()
 
 
-aplicar_analise_sentimentos(['lula eleger outubro de esse vez juiz ladrao marreco capanga fraudar eleicao bolsoasno ir perder familicia bandido ir encolher querer bolsoasno pazuello prender 2023 assim perder foro',
-                             'quadrilha perder poder pq aparecer glen greenwald walter delgattir neto expor mazela de esse orcrim contrario lula estar preso inelegivel vez',
-                             'ciro ir merda ne pqp'])
 tratar_base()
 mostrar_palavras_mais_usadas()
 aplicar_analise_sentimentos()
