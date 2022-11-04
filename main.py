@@ -9,8 +9,6 @@ from nltk import tokenize
 import seaborn as sns
 import re
 import unidecode
-from textblob import TextBlob
-from textblob.sentiments import NaiveBayesAnalyzer
 import spacy
 from string import punctuation
 import itertools
@@ -389,7 +387,6 @@ palavras_classificadas = {
     "derrotar": -1,
     "derrubar": -1,
     "desculpa": -1,
-    "desesperar": -1,
     "desistir": -1,
     "dificil": -1,
     "dinheiro": -1,
@@ -642,7 +639,7 @@ token_pontuacao = tokenize.WordPunctTokenizer()
 nlp = spacy.load("pt_core_news_lg")
 token_espaco = tokenize.WhitespaceTokenizer()
 
-dataframe = pandas.read_excel('bases/turno_2.xlsx')
+dataframe = pandas.read_excel('bases/turno_2_tratado.xlsx')
 
 
 def tratar_base():
@@ -768,11 +765,10 @@ def mostrar_grafico_palavras(quantidade):
 def aplicar_analise_sentimentos():
     polaridade_tweets = []
     nomes_candidatos = itertools.chain.from_iterable(termos_candidatos.values())
-    for tweet in dataframe['texto_tratado']:
+    for tweet in dataframe['texto_tratado'].astype(str):
         pontuacao_tweet = 0
         palavras = tweet.split()
         quantidade_mencoes = len(list(filter(lambda x: x in nomes_candidatos, palavras)))
-        print(len(palavras) - quantidade_mencoes)
         for palavra in palavras:
             if palavra in palavras_classificadas:
                 pontuacao_tweet += palavras_classificadas[palavra] * (1 / (len(palavras) - quantidade_mencoes))
