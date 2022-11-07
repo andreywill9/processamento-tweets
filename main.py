@@ -35,6 +35,18 @@ termos_candidatos = {
     'leo_pericles': ['leo pericles', 'leonardo pericles', '@leopericlesup']
 }
 
+nomes_candidatos = ['lula', 'luiz', 'inacio', 'lula', 'silva', '@lulaoficial',
+                    'bolsonaro', 'jair', 'messias', 'bolsonaro', '@jairbolsonaro',
+                    'ciro', 'ciro', 'gomes', '@cirogomes',
+                    'tebet', 'simone', 'tebet', '@simonetebetbr',
+                    'eymael', 'eymael', '@eymaelpr2022',
+                    'sofia', 'manzano', '@sofiamanzanopcb',
+                    'soraya', 'thronicke', 'soraya', '@sorayathronicke',
+                    'felipe', 'davila', '@fdavilaoficial',
+                    'vera', 'lucia', 'vera', 'lucia', 'pstu', '@verapstu',
+                    'leo', 'pericles', 'leonardo', 'pericles', '@leopericlesup'
+                    ]
+
 arroba_candidato = {'@lulaoficial': 'lula',
                     '@jairbolsonaro': 'bolsonaro',
                     '@cirogomes': 'ciro',
@@ -636,10 +648,8 @@ palavras_classificadas = {
 stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
-nlp = spacy.load("pt_core_news_lg")
-token_espaco = tokenize.WhitespaceTokenizer()
 
-dataframe = pandas.read_excel('bases/turno_2_tratado.xlsx')
+dataframe = pandas.read_excel('bases/pre_eleitoral.xlsx')
 
 
 def tratar_base():
@@ -692,7 +702,6 @@ def tratar_base():
                                         + dataframe['felipe_d_avila'] + dataframe['vera_lucia'] \
                                         + dataframe['leo_pericles']
     dataframe['mais_de_um_candidato'] = dataframe['mais_de_um_candidato'] > 1
-    dataframe.to_excel('bases/base-tratada.xlsx')
 
 
 def mostrar_contagem_citacoes() -> None:
@@ -772,21 +781,21 @@ def aplicar_analise_sentimentos():
         for palavra in palavras:
             if palavra in palavras_classificadas:
                 pontuacao_tweet += palavras_classificadas[palavra] * (1 / (len(palavras) - quantidade_mencoes))
-        polaridade_tweets.append(pontuacao_tweet)
+        polaridade_tweets.append(obter_pontuacao(pontuacao_tweet))
     dataframe['classificacao'] = polaridade_tweets
-    dataframe.to_excel('bases/base-classificada.xlsx')
+    dataframe.to_excel('bases/pre_eleitoral_tratado.xlsx')
 
 
-def obter_sentimento(porcentagem_positiva):
-    if 0 <= porcentagem_positiva <= 0.20:
+def obter_pontuacao(pontuacao_calculada):
+    if pontuacao_calculada == 0:
+        return 0
+    if pontuacao_calculada < -1:
+        return -2
+    if pontuacao_calculada < 0:
+        return -1
+    if pontuacao_calculada < 1:
         return 1
-    if 0.20 < porcentagem_positiva <= 0.40:
-        return 2
-    if 0.40 < porcentagem_positiva <= 0.60:
-        return 3
-    if 0.60 < porcentagem_positiva <= 0.80:
-        return 4
-    return 5
+    return 2
 
 
 def mostrar_nuvem_palavras():
@@ -890,15 +899,15 @@ def mostrar_volumetria_classificacao(candidato):
 
 
 tratar_base()
-mostrar_palavras_mais_usadas()
+# mostrar_palavras_mais_usadas()
 aplicar_analise_sentimentos()
-mostrar_contagem_citacoes()
-mostrar_citacoes_por_semana()
-mostrar_rival_natural()
-mostrar_grafico_palavras(10)
-mostrar_nuvem_palavras()
-mostrar_tweets_unicos_ou_conjunto()
-mostrar_mais_tweets_positivos()
-mostrar_mais_tweets_negativos()
-mostrar_tweets_positivos_por_semana()
-mostrar_volumetria_classificacao('lula')
+# mostrar_contagem_citacoes()
+# mostrar_citacoes_por_semana()
+# mostrar_rival_natural()
+# mostrar_grafico_palavras(10)
+# mostrar_nuvem_palavras()
+# mostrar_tweets_unicos_ou_conjunto()
+# mostrar_mais_tweets_positivos()
+# mostrar_mais_tweets_negativos()
+# mostrar_tweets_positivos_por_semana()
+# mostrar_volumetria_classificacao('lula')
