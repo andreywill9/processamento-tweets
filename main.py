@@ -649,7 +649,7 @@ stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
 
-dataframe = pandas.read_excel('bases/pre_eleitoral.xlsx')
+dataframe = pandas.read_excel('bases/turno_2_tratado.xlsx')
 
 
 def tratar_base():
@@ -706,11 +706,14 @@ def tratar_base():
 
 def mostrar_contagem_citacoes() -> None:
     df = pandas.melt(dataframe, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
-    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    plt.subplots(figsize=(20, 10))
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#ffa500")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações')
-    plt.show()
-    plt.close()
+    grafico.set_title("Total de menções por candidato")
+    sns.set(font_scale=1)
+    for p in grafico.patches:
+        grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
 
 
 def mostrar_citacoes_por_semana() -> None:
@@ -725,8 +728,13 @@ def mostrar_citacoes_por_semana() -> None:
                 'candidato': candidato,
                 'quantidade': quantidade
             }])])
+
     df3 = df.pivot(index='semana', columns='candidato', values='quantidade')
-    df3.plot()
+    df3.plot(figsize=(20, 10),
+             lw=3,
+             kind='line',
+             style='s:',
+             title="Menções por semana")
     plt.xlabel('Semana')
     plt.ylabel('Número de citações')
     plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
@@ -749,25 +757,28 @@ def mostrar_rival_natural() -> None:
                 'citacoes': contagem
             }])])
     df = df.sort_values(by='citacoes', ascending=False, ignore_index=True)
-    df = df[:5]
+    df = df[:10]
     df.set_index('candidatos', inplace=True)
-    df.plot(kind='barh')
+    df.plot(figsize=(20, 10),
+            kind='barh',
+            title="Maiores menções em conjunto (""Rivais Naturais"")").legend(loc='upper center')
     plt.xlabel('Número de citações')
-    plt.ylabel('Rivais')
+    plt.ylabel('Rivais naturais')
     plt.xticks(rotation=0, horizontalalignment="center")
     plt.show()
 
 
 def mostrar_grafico_palavras(quantidade):
-    todas_palavras = ' '.join([texto for texto in dataframe['texto_tratado']])
+    todas_palavras = ' '.join([texto for texto in dataframe['texto']])
     token_frase = token_espaco.tokenize(todas_palavras)
     frequencia = nltk.FreqDist(token_frase)
     df_frequencia = pandas.DataFrame({"palavra": list(frequencia.keys()), "frequencia": list(frequencia.values())})
     df_frequencia.nlargest(columns="frequencia", n=quantidade)
     df_frequencia = df_frequencia.nlargest(columns="frequencia", n=10)
-    plt.figure(figsize=(12, 8))
-    ax = sns.barplot(data=df_frequencia, x="palavra", y="frequencia")
-    ax.set(ylabel="Contagem")
+    plt.figure(figsize=(15, 10))
+    grafico = sns.barplot(data=df_frequencia, x="palavra", y="frequencia")
+    grafico.set(ylabel="Contagem")
+    grafico.set_title("Total de citações por candidato")
     plt.show()
 
 
@@ -783,7 +794,6 @@ def aplicar_analise_sentimentos():
                 pontuacao_tweet += palavras_classificadas[palavra] * (1 / (len(palavras) - quantidade_mencoes))
         polaridade_tweets.append(obter_pontuacao(pontuacao_tweet))
     dataframe['classificacao'] = polaridade_tweets
-    dataframe.to_excel('bases/pre_eleitoral_tratado.xlsx')
 
 
 def obter_pontuacao(pontuacao_calculada):
@@ -800,24 +810,37 @@ def obter_pontuacao(pontuacao_calculada):
 
 def mostrar_nuvem_palavras():
     todas_palavras = ' '.join([texto for texto in dataframe.texto_tratado])
-    nuvem_palavras = WordCloud(width=1500,
-                               height=800,
-                               max_font_size=200,
+    nuvem_palavras = WordCloud(width=2000,
+                               height=1000,
+                               colormap="Dark2",
+                               background_color="#fefff2",
                                collocations=False).generate(todas_palavras)
 
-    plt.figure(figsize=(10, 7))
+    plt.figure(figsize=(20, 10))
     plt.imshow(nuvem_palavras, interpolation='bilinear')
     plt.axis("off")
+    plt.title("Palavras mais usadas durante as eleições no Twitter")
     plt.show()
 
 
 def mostrar_tweets_unicos_ou_conjunto():
     quantidade_tweets_unicos = len(dataframe.query('mais_de_um_candidato == 0'))
     quantidade_tweets_conjunto = len(dataframe.query('mais_de_um_candidato == 1'))
-    legenda = 'unico', 'conjunto'
-    plt.pie([quantidade_tweets_unicos, quantidade_tweets_conjunto], labels=legenda,
-            autopct='%1.1f%%',
-            shadow=True)
+
+    qtde = [quantidade_tweets_unicos, quantidade_tweets_conjunto]
+    legenda = 'Único', 'Conjunto'
+    cores = ["#e7c137", "#a6d1ff"]
+    explosao = [0.1, 0]
+    fig, chart = plt.subplots(figsize=(10, 8))
+    chart.pie(qtde,
+              labels=legenda,
+              autopct='%1.1f%%',
+              colors=cores,
+              explode=explosao,
+              startangle=90,
+              shadow=True)
+    chart.set_title("Menções dos candidatos")
+    plt.legend(title="")
     plt.show()
 
 
@@ -825,22 +848,30 @@ def mostrar_mais_tweets_positivos():
     dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & classificacao > 0')
     df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato',
                      value_name='citacoes')
-    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    plt.subplots(figsize=(20, 10))
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#23C552")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações positivas')
+    grafico.set_title("Total de citações positivas")
+    sns.set(font_scale=1)
+    for p in grafico.patches:
+        grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
     plt.show()
-    plt.close()
 
 
 def mostrar_mais_tweets_negativos():
     dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & classificacao < 0')
     df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato',
                      value_name='citacoes')
-    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato')
+    plt.subplots(figsize=(20, 10))
+    grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#F84F31")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações negativas')
+    grafico.set_title("Total de citações negativas")
+    sns.set(font_scale=1)
+    for p in grafico.patches:
+        grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
     plt.show()
-    plt.close()
 
 
 def mostrar_tweets_positivos_por_semana() -> None:
@@ -864,17 +895,17 @@ def mostrar_tweets_positivos_por_semana() -> None:
     plt.show()
 
 
-def mostrar_palavras_mais_usadas():
-    todas_palavras = ' '.join([texto for texto in dataframe['texto_tratado']])
+def salvar_palavras_mais_usadas():
+    todas_palavras = ' '.join([texto for texto in dataframe['texto_tratado'].astype(str)])
     token_frase = token_espaco.tokenize(todas_palavras)
     frequencia = nltk.FreqDist(token_frase)
     df_frequencia = pandas.DataFrame({"palavra": list(frequencia.keys()), "frequencia": list(frequencia.values())})
     df_frequencia.to_excel('bases/palavras_mais_usadas_periodo_completo.xlsx')
 
 
-def mostrar_volumetria_classificacao(candidato):
+def mostrar_volumetria_classificacao():
     quantidade_neutro, quantidade_positivo, quantidade_negativo = 0, 0, 0
-    df_candidato = dataframe.query(f'{candidato} == 1 & mais_de_um_candidato == 0')
+    df_candidato = dataframe.query(f'lula == 1 & mais_de_um_candidato == 0')
     for classificacao in df_candidato['classificacao'].astype(float):
         if classificacao > 0:
             quantidade_positivo += 1
@@ -883,31 +914,33 @@ def mostrar_volumetria_classificacao(candidato):
             quantidade_negativo += 1
             continue
         quantidade_neutro += 1
+
     legenda = 'Positivo', 'Negativo', 'Neutro'
-    cores = ["#23C552", "#F84F31", "#808080"]
+    cores = ["#23C552", "#F84F31", "#808080"]  #
     quantidade_geral = [quantidade_positivo, quantidade_negativo, quantidade_neutro]
-    plt.pie(quantidade_geral,
-            labels=legenda,
-            autopct='%1.1f%%',
-            colors=cores,
-            shadow=True)
-    print(f'Positivos: {quantidade_positivo}')
-    print(f'Negativos: {quantidade_negativo}')
-    print(f'Neutros: {quantidade_neutro}')
+
+    fig, chart = plt.subplots(figsize=(10, 8))
+
+    chart.pie(quantidade_geral,
+              labels=legenda,
+              autopct='%1.1f%%',
+              colors=cores,
+              shadow=True)
+    chart.set_title("Sentimentos")
     plt.legend(title="Sentimento")
     plt.show()
 
 
-tratar_base()
+# tratar_base()
 # mostrar_palavras_mais_usadas()
-aplicar_analise_sentimentos()
-# mostrar_contagem_citacoes()
-# mostrar_citacoes_por_semana()
-# mostrar_rival_natural()
-# mostrar_grafico_palavras(10)
-# mostrar_nuvem_palavras()
-# mostrar_tweets_unicos_ou_conjunto()
-# mostrar_mais_tweets_positivos()
-# mostrar_mais_tweets_negativos()
-# mostrar_tweets_positivos_por_semana()
+# aplicar_analise_sentimentos()
+mostrar_contagem_citacoes()
+mostrar_citacoes_por_semana()
+mostrar_rival_natural()
+mostrar_grafico_palavras(10)
+mostrar_nuvem_palavras()
+mostrar_tweets_unicos_ou_conjunto()
+mostrar_mais_tweets_positivos()
+mostrar_mais_tweets_negativos()
+mostrar_tweets_positivos_por_semana()
 # mostrar_volumetria_classificacao('lula')
