@@ -54,6 +54,7 @@ def tratar_base(dataframe: pandas.DataFrame):
     dataframe['data_tweet'] = pandas.to_datetime(dataframe['data_tweet']) \
         .dt.tz_localize(None)
     dataframe['mes'] = dataframe['data_tweet'].dt.month
+    dataframe['dia'] = dataframe['data_tweet'].map(lambda data: f'{data.day}/{data.month}')
     dataframe['semana_ano'] = dataframe['data_tweet'].map(lambda data: int(data.strftime("%V")))
     dataframe['semana_analise'] = dataframe['semana_ano'] - 22
     for chave, valor in termos_todos_candidatos.items():

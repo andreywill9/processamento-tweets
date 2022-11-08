@@ -53,8 +53,28 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict) -> None:
 
 
 def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict) -> None:
-    print()
-    # TODO
+    df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
+    dias_analise = dataframe['dia'].unique()
+    for dia in dias_analise:
+        for candidato in termos_candidatos.keys():
+            df2 = dataframe.query(f'dia == {dia} & {candidato} == 1')
+            quantidade = len(df2.index)
+            df = pandas.concat([df, pandas.DataFrame.from_records([{
+                'dia': dia,
+                'candidato': candidato,
+                'quantidade': quantidade
+            }])])
+
+    df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
+    df3.plot(figsize=(20, 10),
+             lw=3,
+             kind='line',
+             style='s:',
+             title="Menções por dia")
+    plt.xlabel('Dia')
+    plt.ylabel('Número de citações')
+    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
+    plt.show()
 
 
 def mostrar_rival_natural(dataframe, termos_candidatos: dict) -> None:
@@ -185,9 +205,38 @@ def mostrar_tweets_positivos_por_semana(dataframe, termos_candidatos: dict) -> N
     plt.show()
 
 
-def mostrar_volumetria_classificacao(dataframe):
+def mostrar_volumetria_classificacao_candidato(dataframe, candidato: str):
     quantidade_neutro, quantidade_positivo, quantidade_negativo = 0, 0, 0
-    df_candidato = dataframe.query(f'lula == 1 & mais_de_um_candidato == 0')
+    df_candidato = dataframe.query(f'{candidato} == 1 & mais_de_um_candidato == 0')
+    for classificacao in df_candidato['classificacao'].astype(float):
+        if classificacao > 0:
+            quantidade_positivo += 1
+            continue
+        if classificacao < 0:
+            quantidade_negativo += 1
+            continue
+        quantidade_neutro += 1
+
+    legenda = 'Positivo', 'Negativo', 'Neutro'
+    cores = ["#23C552", "#F84F31", "#808080"]
+    quantidade_geral = [quantidade_positivo, quantidade_negativo, quantidade_neutro]
+
+    fig, chart = plt.subplots(figsize=(10, 8))
+
+    chart.pie(quantidade_geral,
+              labels=legenda,
+              autopct='%1.1f%%',
+              colors=cores,
+              shadow=True)
+    chart.set_title("Sentimentos")
+    plt.legend(title="Sentimento")
+    plt.show()
+
+
+def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict):
+    quantidade_neutro, quantidade_positivo, quantidade_negativo = 0, 0, 0
+    query_candidatos = ' | '.join(list(map(lambda candidato: f'{candidato} == 1', list(termo_candidatos.keys()))))
+    df_candidato = dataframe.query(f'({query_candidatos}) & mais_de_um_candidato == 0')
     for classificacao in df_candidato['classificacao'].astype(float):
         if classificacao > 0:
             quantidade_positivo += 1
