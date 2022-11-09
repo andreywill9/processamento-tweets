@@ -296,11 +296,18 @@ def mostrar_evolucao_classificacao(dataframe, nome_candidato: str) -> None:
     plt.show()
 
 
-def mostrar_nuvem_palavras_periodo(dataframe, data_inicial, data_final, titulo) -> None:
+def mostrar_nuvem_palavras_periodo(dataframe, data_inicial, data_final, titulo, positivo=False, negativo=False) -> None:
     inicio_periodo = data_inicial - timedelta(days=1)
     fim_periodo = data_final + timedelta(days=1)
     mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
     dataframe_filtrado = dataframe.loc[mask]
+    print(f'Tamanho do periodo: {len(dataframe_filtrado.index)}')
+    if positivo:
+        mask2 = (dataframe['classificacao'] > 0)
+        dataframe_filtrado = dataframe_filtrado.loc[mask2]
+    if negativo:
+        mask2 = (dataframe['classificacao'] < 0)
+        dataframe_filtrado = dataframe_filtrado.loc[mask2]
     todas_palavras = ' '.join([texto for texto in dataframe_filtrado.texto_tratado.astype(str)])
     nuvem_palavras = WordCloud(width=2000,
                                height=1000,
