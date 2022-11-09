@@ -1,5 +1,6 @@
 import matplotlib
 import pandas
+from datetime import timedelta
 
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -292,4 +293,23 @@ def mostrar_evolucao_classificacao(dataframe, nome_candidato: str) -> None:
         df_mencoes = dataframe.query(f'semana_analise == {semana} & {nome_candidato} == 1 & mais_de_um_candidato == 0')
         mencoes_positivas.append(len(df_mencoes.index))
     plt.plot(semanas_analise, mencoes_positivas)
+    plt.show()
+
+
+def mostrar_nuvem_palavras_periodo(dataframe, data_inicial, data_final, titulo) -> None:
+    inicio_periodo = data_inicial - timedelta(days=1)
+    fim_periodo = data_final + timedelta(days=1)
+    mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
+    dataframe_filtrado = dataframe.loc[mask]
+    todas_palavras = ' '.join([texto for texto in dataframe_filtrado.texto_tratado.astype(str)])
+    nuvem_palavras = WordCloud(width=2000,
+                               height=1000,
+                               colormap="Dark2",
+                               background_color="#fefff2",
+                               collocations=False).generate(todas_palavras)
+
+    plt.figure(figsize=(20, 10))
+    plt.imshow(nuvem_palavras, interpolation='bilinear')
+    plt.axis("off")
+    plt.title(titulo)
     plt.show()
