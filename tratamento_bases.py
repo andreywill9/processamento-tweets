@@ -54,7 +54,7 @@ def tratar_base(dataframe: pandas.DataFrame):
     dataframe['data_tweet'] = pandas.to_datetime(dataframe['data_tweet']) \
         .dt.tz_localize(None)
     dataframe['mes'] = dataframe['data_tweet'].dt.month
-    dataframe['dia'] = dataframe['data_tweet'].map(lambda data: f'{data.day}/{data.month}')
+    dataframe['dia'] = dataframe['data_tweet'].map(lambda data: f'{str(data.day).zfill(2)}/{str(data.month).zfill(2)}')
     dataframe['semana_ano'] = dataframe['data_tweet'].map(lambda data: int(data.strftime("%V")))
     dataframe['semana_analise'] = dataframe['semana_ano'] - 22
     for chave, valor in termos_todos_candidatos.items():
@@ -68,6 +68,7 @@ def tratar_base(dataframe: pandas.DataFrame):
                                         + dataframe['felipe_d_avila'] + dataframe['vera_lucia'] \
                                         + dataframe['leo_pericles']
     dataframe['mais_de_um_candidato'] = dataframe['mais_de_um_candidato'] > 1
+    dataframe.sort_values(by='data_tweet')
 
 
 def aplicar_analise_sentimentos(dataframe: pandas.DataFrame):
@@ -108,7 +109,8 @@ dataframes = {
     'turno_1': pandas.read_excel('bases/turno_1.xlsx'),
     'turno_2': pandas.read_excel('bases/turno_2.xlsx'),
     'periodo_eleitoral_completo': pandas.read_excel('bases/periodo_eleitoral_completo.xlsx'),
-    'pre_eleitoral': pandas.read_excel('bases/pre_eleitoral.xlsx')
+    'pre_eleitoral': pandas.read_excel('bases/pre_eleitoral.xlsx'),
+    'pesquisa_completa': pandas.read_excel('bases/pesquisa_completa.xlsx')
 }
 for nome_dataframe in dataframes:
     tratar_base(dataframes[nome_dataframe])

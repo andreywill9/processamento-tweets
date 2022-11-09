@@ -54,17 +54,16 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict) -> None:
 
 def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict) -> None:
     df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
-    dias_analise = dataframe['dia'].unique()
+    dias_analise = dataframe['dia'].astype(str).unique()
     for dia in dias_analise:
         for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'dia == {dia} & {candidato} == 1')
+            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1')
             quantidade = len(df2.index)
             df = pandas.concat([df, pandas.DataFrame.from_records([{
                 'dia': dia,
                 'candidato': candidato,
                 'quantidade': quantidade
             }])])
-
     df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
     df3.plot(figsize=(20, 10),
              lw=3,
