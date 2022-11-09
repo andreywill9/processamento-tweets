@@ -259,3 +259,37 @@ def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict):
     chart.set_title("Sentimentos")
     plt.legend(title="Sentimento")
     plt.show()
+
+
+def mostrar_citacoes_positivas_por_dia(dataframe, termos_candidatos: dict) -> None:
+    df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
+    dias_analise = dataframe['dia'].astype(str).unique()
+    for dia in dias_analise:
+        for candidato in termos_candidatos.keys():
+            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1 & classificacao > 0 & mais_de_um_candidato == 0')
+            quantidade = len(df2.index)
+            df = pandas.concat([df, pandas.DataFrame.from_records([{
+                'dia': dia,
+                'candidato': candidato,
+                'quantidade': quantidade
+            }])])
+    df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
+    df3.plot(figsize=(20, 10),
+             lw=3,
+             kind='line',
+             style='s:',
+             title="Menções positivas por dia")
+    plt.xlabel('Dia')
+    plt.ylabel('Número de menções positivas')
+    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
+    plt.show()
+
+
+def mostrar_evolucao_classificacao(dataframe, nome_candidato: str) -> None:
+    semanas_analise = dataframe['semana_analise'].astype(str).unique()
+    mencoes_positivas = []
+    for semana in semanas_analise:
+        df_mencoes = dataframe.query(f'semana_analise == {semana} & {nome_candidato} == 1 & mais_de_um_candidato == 0')
+        mencoes_positivas.append(len(df_mencoes.index))
+    plt.plot(semanas_analise, mencoes_positivas)
+    plt.show()
