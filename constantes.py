@@ -16,7 +16,8 @@ termos_todos_candidatos = {
     'soraya_thronicke': ['soraya thronicke', 'soraya união brasil', '@sorayathronicke'],
     'felipe_d_avila': ['felipe davila', 'felipe davila novo', '@fdavilaoficial'],
     'vera_lucia': ['vera lucia', 'vera lucia pstu', '@verapstu'],
-    'leo_pericles': ['leo pericles', 'leonardo pericles', '@leopericlesup']
+    'leo_pericles': ['leo pericles', 'leonardo pericles', '@leopericlesup'],
+    'padre_kelmon': ['padre kelmon', '@pekelmon']
 }
 
 termos_candidatos_segundo_turno = {
@@ -33,7 +34,8 @@ nomes_candidatos = ['lula', 'luiz', 'inacio', 'lula', 'silva', '@lulaoficial',
                     'soraya', 'thronicke', 'soraya', '@sorayathronicke',
                     'felipe', 'davila', '@fdavilaoficial',
                     'vera', 'lucia', 'vera', 'lucia', 'pstu', '@verapstu',
-                    'leo', 'pericles', 'leonardo', 'pericles', '@leopericlesup'
+                    'leo', 'pericles', 'leonardo', 'pericles', '@leopericlesup',
+                    'kelmon', '@pekelmon'
                     ]
 
 arroba_candidato = {'@lulaoficial': 'lula',
@@ -45,7 +47,8 @@ arroba_candidato = {'@lulaoficial': 'lula',
                     '@sorayathronicke': 'soraya_thronicke',
                     '@fdavilaoficial': 'felipe_d_avila',
                     '@verapstu': 'vera_lucia',
-                    '@leopericlesup': 'leo_pericles'}
+                    '@leopericlesup': 'leo_pericles',
+                    '@pekelmon': 'padre_kelmon'}
 
 abreviacoes = {
     'vc': 'voce',
