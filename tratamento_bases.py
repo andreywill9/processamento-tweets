@@ -11,6 +11,7 @@ import re
 import unidecode
 import spacy
 import itertools
+from datetime import datetime
 
 nltk.download('movie_reviews')
 nltk.download('punkt')
@@ -68,7 +69,7 @@ def tratar_base(dataframe: pandas.DataFrame):
                                         + dataframe['felipe_d_avila'] + dataframe['vera_lucia'] \
                                         + dataframe['leo_pericles']
     dataframe['mais_de_um_candidato'] = dataframe['mais_de_um_candidato'] > 1
-    dataframe.sort_values(by='data_tweet')
+    dataframe.sort_values(by='data_tweet', inplace=True)
 
 
 def aplicar_analise_sentimentos(dataframe: pandas.DataFrame):
@@ -105,6 +106,8 @@ def salvar_palavras_mais_usadas(dataframe: pandas.DataFrame, caminho_saida: str)
     df_frequencia.to_excel(caminho_saida)
 
 
+inicio_execucao = datetime.now()
+print(f'Incicio da execução: {inicio_execucao}')
 dataframes = {
     'turno_1': pandas.read_excel('bases/turno_1.xlsx'),
     'turno_2': pandas.read_excel('bases/turno_2.xlsx'),
@@ -113,6 +116,10 @@ dataframes = {
     'pesquisa_completa': pandas.read_excel('bases/pesquisa_completa.xlsx')
 }
 for nome_dataframe in dataframes:
+    print(f'Iniciando {nome_dataframe}...')
     tratar_base(dataframes[nome_dataframe])
     aplicar_analise_sentimentos(dataframes[nome_dataframe])
     dataframes[nome_dataframe].to_excel(f'bases/{nome_dataframe}_tratado.xlsx')
+    print(f'{nome_dataframe} tratado!!')
+fim_execucao = datetime.now()
+print(f'Fim da execução: {fim_execucao}')
