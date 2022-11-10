@@ -53,12 +53,17 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict) -> None:
     plt.show()
 
 
-def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict) -> None:
+def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict, titulo, positivo=False, negativo=False) -> None:
+    query_comum = ''
+    if positivo:
+        query_comum += '& classificacao > 0 '
+    if negativo:
+        query_comum += '& classificacao < 0 '
     df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
     dias_analise = dataframe['dia'].astype(str).unique()
     for dia in dias_analise:
         for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1')
+            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1 {query_comum}')
             quantidade = len(df2.index)
             df = pandas.concat([df, pandas.DataFrame.from_records([{
                 'dia': dia,
@@ -70,7 +75,7 @@ def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict) -> None:
              lw=3,
              kind='line',
              style='s:',
-             title="Menções por dia")
+             title=titulo)
     plt.xlabel('Dia')
     plt.ylabel('Número de citações')
     plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
@@ -259,30 +264,6 @@ def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict):
               shadow=True)
     chart.set_title("Sentimentos")
     plt.legend(title="Sentimento")
-    plt.show()
-
-
-def mostrar_citacoes_positivas_por_dia(dataframe, termos_candidatos: dict) -> None:
-    df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
-    dias_analise = dataframe['dia'].astype(str).unique()
-    for dia in dias_analise:
-        for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1 & classificacao > 0 & mais_de_um_candidato == 0')
-            quantidade = len(df2.index)
-            df = pandas.concat([df, pandas.DataFrame.from_records([{
-                'dia': dia,
-                'candidato': candidato,
-                'quantidade': quantidade
-            }])])
-    df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
-    df3.plot(figsize=(20, 10),
-             lw=3,
-             kind='line',
-             style='s:',
-             title="Menções positivas por dia")
-    plt.xlabel('Dia')
-    plt.ylabel('Número de menções positivas')
-    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
     plt.show()
 
 
