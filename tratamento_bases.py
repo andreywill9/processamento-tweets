@@ -34,8 +34,6 @@ def tratar_base(dataframe: pandas.DataFrame):
         outras_mencoes = list(filter((lambda x: x not in arroba_candidato), mencoes_tweet))
         palavras_texto2 = opiniao.split(' ')
         for palavra in palavras_texto2:
-            if re.match(r'^(k|ha|rs|lol|he)+', palavra):
-                continue
             if palavra in outras_mencoes or palavra in stopwords or set(
                     abreviacoes[palavra].split(' ') if palavra in abreviacoes.keys() else [palavra]).issubset(stopwords):
                 continue
