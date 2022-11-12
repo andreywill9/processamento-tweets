@@ -15,25 +15,32 @@ nltk.download('punkt')
 token_espaco = tokenize.WhitespaceTokenizer()
 
 
-def mostrar_contagem_citacoes(dataframe, termos_candidatos: dict) -> None:
+def mostrar_contagem_citacoes(dataframe, termos_candidatos: dict, titulo: str) -> None:
     df = pandas.melt(dataframe, value_vars=list(termos_candidatos.keys()), var_name='candidato', value_name='citacoes')
     plt.subplots(figsize=(20, 10))
     grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#ffa500")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações')
-    grafico.set_title("Total de menções por candidato")
+    grafico.set_title(titulo)
     sns.set(font_scale=1)
     for p in grafico.patches:
         grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
     plt.show()
 
 
-def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict) -> None:
+def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict, titulo: str, positivo=False, negativo=False, candidato_unico=False) -> None:
+    query_comum = ''
+    if positivo:
+        query_comum += '& classificacao > 0 '
+    if negativo:
+        query_comum += '& classificacao < 0 '
+    if candidato_unico:
+        query_comum += '& mais_de_um_candidato == 0'
     df = pandas.DataFrame(columns=['semana', 'candidato', 'quantidade'])
     semanas_analise = dataframe['semana_analise'].unique()
     for semana in semanas_analise:
         for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'semana_analise == {semana} & {candidato} == 1')
+            df2 = dataframe.query(f'semana_analise == {semana} & {candidato} == 1 {query_comum}')
             quantidade = len(df2.index)
             df = pandas.concat([df, pandas.DataFrame.from_records([{
                 'semana': semana,
@@ -46,19 +53,22 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict) -> None:
              lw=3,
              kind='line',
              style='s:',
-             title="Menções por semana")
+             title=titulo)
     plt.xlabel('Semana')
     plt.ylabel('Número de citações')
     plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
     plt.show()
 
 
-def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict, titulo, positivo=False, negativo=False) -> None:
+def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict, titulo, positivo=False, negativo=False,
+                             candidato_unico=False) -> None:
     query_comum = ''
     if positivo:
         query_comum += '& classificacao > 0 '
     if negativo:
         query_comum += '& classificacao < 0 '
+    if candidato_unico:
+        query_comum += '& mais_de_um_candidato == 0'
     df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
     dias_analise = dataframe['dia'].astype(str).unique()
     for dia in dias_analise:
@@ -109,8 +119,8 @@ def mostrar_rival_natural(dataframe, termos_candidatos: dict) -> None:
     plt.show()
 
 
-def mostrar_grafico_palavras(dataframe, quantidade: int):
-    todas_palavras = ' '.join([texto for texto in dataframe['texto']])
+def mostrar_grafico_palavras(dataframe, quantidade: int, titulo: str):
+    todas_palavras = ' '.join([texto for texto in dataframe['texto_tratado'].astype(str)])
     token_frase = token_espaco.tokenize(todas_palavras)
     frequencia = nltk.FreqDist(token_frase)
     df_frequencia = pandas.DataFrame({"palavra": list(frequencia.keys()), "frequencia": list(frequencia.values())})
@@ -119,22 +129,7 @@ def mostrar_grafico_palavras(dataframe, quantidade: int):
     plt.figure(figsize=(15, 10))
     grafico = sns.barplot(data=df_frequencia, x="palavra", y="frequencia")
     grafico.set(ylabel="Contagem")
-    grafico.set_title("Total de citações por candidato")
-    plt.show()
-
-
-def mostrar_nuvem_palavras(dataframe):
-    todas_palavras = ' '.join([texto for texto in dataframe.texto_tratado.astype(str)])
-    nuvem_palavras = WordCloud(width=2000,
-                               height=1000,
-                               colormap="Dark2",
-                               background_color="#fefff2",
-                               collocations=False).generate(todas_palavras)
-
-    plt.figure(figsize=(20, 10))
-    plt.imshow(nuvem_palavras, interpolation='bilinear')
-    plt.axis("off")
-    plt.title("Palavras mais usadas durante as eleições no Twitter")
+    grafico.set_title(titulo)
     plt.show()
 
 
@@ -159,7 +154,7 @@ def mostrar_tweets_unicos_ou_conjunto(dataframe):
     plt.show()
 
 
-def mostrar_mais_tweets_positivos(dataframe, termos_candidatos: dict):
+def mostrar_mais_tweets_positivos(dataframe, termos_candidatos: dict, titulo: str):
     dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & classificacao > 0')
     df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato',
                      value_name='citacoes')
@@ -167,14 +162,14 @@ def mostrar_mais_tweets_positivos(dataframe, termos_candidatos: dict):
     grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#23C552")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações positivas')
-    grafico.set_title("Total de citações positivas")
+    grafico.set_title(titulo)
     sns.set(font_scale=1)
     for p in grafico.patches:
         grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
     plt.show()
 
 
-def mostrar_mais_tweets_negativos(dataframe, termos_candidatos: dict):
+def mostrar_mais_tweets_negativos(dataframe, termos_candidatos: dict, titulo: str):
     dataframe_filtrado = dataframe.query('mais_de_um_candidato == 0 & classificacao < 0')
     df = pandas.melt(dataframe_filtrado, value_vars=list(termos_candidatos.keys()), var_name='candidato',
                      value_name='citacoes')
@@ -182,7 +177,7 @@ def mostrar_mais_tweets_negativos(dataframe, termos_candidatos: dict):
     grafico = sns.countplot(data=df.loc[df['citacoes'] == 1], x='candidato', color="#F84F31")
     grafico.set_xlabel('Candidato')
     grafico.set_ylabel('Número de citações negativas')
-    grafico.set_title("Total de citações negativas")
+    grafico.set_title(titulo)
     sns.set(font_scale=1)
     for p in grafico.patches:
         grafico.annotate(p.get_height(), (p.get_x() + 0.25, p.get_height() + 0.01))
@@ -210,7 +205,7 @@ def mostrar_tweets_positivos_por_semana(dataframe, termos_candidatos: dict) -> N
     plt.show()
 
 
-def mostrar_volumetria_classificacao_candidato(dataframe, candidato: str):
+def mostrar_volumetria_classificacao_candidato(dataframe, candidato: str, titulo: str):
     quantidade_neutro, quantidade_positivo, quantidade_negativo = 0, 0, 0
     df_candidato = dataframe.query(f'{candidato} == 1 & mais_de_um_candidato == 0')
     for classificacao in df_candidato['classificacao'].astype(float):
@@ -233,12 +228,12 @@ def mostrar_volumetria_classificacao_candidato(dataframe, candidato: str):
               autopct='%1.1f%%',
               colors=cores,
               shadow=True)
-    chart.set_title("Sentimentos")
+    chart.set_title(titulo)
     plt.legend(title="Sentimento")
     plt.show()
 
 
-def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict):
+def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict, titulo: str):
     quantidade_neutro, quantidade_positivo, quantidade_negativo = 0, 0, 0
     query_candidatos = ' | '.join(list(map(lambda candidato: f'{candidato} == 1', list(termo_candidatos.keys()))))
     df_candidato = dataframe.query(f'({query_candidatos}) & mais_de_um_candidato == 0')
@@ -262,34 +257,42 @@ def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict):
               autopct='%1.1f%%',
               colors=cores,
               shadow=True)
-    chart.set_title("Sentimentos")
+    chart.set_title(titulo)
     plt.legend(title="Sentimento")
     plt.show()
 
 
-def mostrar_evolucao_classificacao(dataframe, nome_candidato: str) -> None:
+def mostrar_evolucao_classificacao(dataframe, nome_candidato: str, titulo: str, positivo=False, negativo=False) -> None:
+    query_comum = ''
+    if positivo:
+        query_comum = '& classificacao > 0'
+    if negativo:
+        query_comum = '& classificacao < 0'
     semanas_analise = dataframe['semana_analise'].astype(str).unique()
     mencoes_positivas = []
     for semana in semanas_analise:
-        df_mencoes = dataframe.query(f'semana_analise == {semana} & {nome_candidato} == 1 & mais_de_um_candidato == 0')
+        df_mencoes = dataframe.query(f'semana_analise == {semana} & {nome_candidato} == 1 & mais_de_um_candidato == 0 '
+                                     f'{query_comum}')
         mencoes_positivas.append(len(df_mencoes.index))
     plt.plot(semanas_analise, mencoes_positivas)
+    plt.title(titulo)
     plt.show()
 
 
-def mostrar_nuvem_palavras_periodo(dataframe, data_inicial, data_final, titulo, positivo=False, negativo=False) -> None:
-    inicio_periodo = data_inicial - timedelta(days=1)
-    fim_periodo = data_final + timedelta(days=1)
-    mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
-    dataframe_filtrado = dataframe.loc[mask]
-    print(f'Tamanho do periodo: {len(dataframe_filtrado.index)}')
+def mostrar_nuvem_palavras(dataframe, titulo, data_inicial=None, data_final=None, positivo=False, negativo=False) -> None:
+    dataframe_final = dataframe
+    if data_inicial is not None:
+        inicio_periodo = data_inicial - timedelta(days=1)
+        fim_periodo = data_final + timedelta(days=1)
+        mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
+        dataframe_final = dataframe.loc[mask]
     if positivo:
         mask2 = (dataframe['classificacao'] > 0)
-        dataframe_filtrado = dataframe_filtrado.loc[mask2]
+        dataframe_final = dataframe_final.loc[mask2]
     if negativo:
         mask2 = (dataframe['classificacao'] < 0)
-        dataframe_filtrado = dataframe_filtrado.loc[mask2]
-    todas_palavras = ' '.join([texto for texto in dataframe_filtrado.texto_tratado.astype(str)])
+        dataframe_final = dataframe_final.loc[mask2]
+    todas_palavras = ' '.join([texto for texto in dataframe_final.texto_tratado.astype(str)])
     nuvem_palavras = WordCloud(width=2000,
                                height=1000,
                                colormap="Dark2",
