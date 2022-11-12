@@ -1,3 +1,4 @@
+import datetime
 from string import punctuation
 
 import nltk
@@ -17,7 +18,7 @@ termos_todos_candidatos = {
     'felipe_d_avila': ['felipe davila', 'felipe davila novo', '@fdavilaoficial'],
     'vera_lucia': ['vera lucia', 'vera lucia pstu', '@verapstu'],
     'leo_pericles': ['leo pericles', 'leonardo pericles', '@leopericlesup'],
-    'padre_kelmon': ['padre kelmon', '@pekelmon']
+    'padre_kelmon': ['kelmon', '@padrekelmon', '@pekelmon']
 }
 
 termos_candidatos_segundo_turno = {
@@ -35,7 +36,7 @@ nomes_candidatos = ['lula', 'luiz', 'inacio', 'lula', 'silva', '@lulaoficial',
                     'felipe', 'davila', '@fdavilaoficial',
                     'vera', 'lucia', 'vera', 'lucia', 'pstu', '@verapstu',
                     'leo', 'pericles', 'leonardo', 'pericles', '@leopericlesup',
-                    'kelmon', '@pekelmon'
+                    'kelmon', '@pekelmon', '@padrekelmon'
                     ]
 
 arroba_candidato = {'@lulaoficial': 'lula',
@@ -48,7 +49,8 @@ arroba_candidato = {'@lulaoficial': 'lula',
                     '@fdavilaoficial': 'felipe_d_avila',
                     '@verapstu': 'vera_lucia',
                     '@leopericlesup': 'leo_pericles',
-                    '@pekelmon': 'padre_kelmon'}
+                    '@pekelmon': 'padre_kelmon',
+                    '@padrekelmon': 'padre_kelmon'}
 
 abreviacoes = {
     'vc': 'voce',
@@ -636,6 +638,14 @@ palavras_classificadas = {
     "violencia": -2,
     "xingar": -2
 }
+
+inicio_primeiro_turno = datetime.datetime(year=2022, month=8, day=16)
+
+fim_primeiro_turno = datetime.datetime(year=2022, month=10, day=1)
+
+inicio_segundo_turno = datetime.datetime(year=2022, month=10, day=3)
+
+fim_segundo_turno = datetime.datetime(year=2022, month=10, day=29)
 
 stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
