@@ -28,7 +28,20 @@ def mostrar_contagem_citacoes(dataframe, termos_candidatos: dict, titulo: str) -
     plt.show()
 
 
-def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict, titulo: str, positivo=False, negativo=False, candidato_unico=False) -> None:
+def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict, titulo: str, positivo=False, negativo=False,
+                                candidato_unico=False, data_inicial=None, data_final=None) -> None:
+    dataframe_final = dataframe
+    if data_inicial is not None:
+        inicio_periodo = data_inicial - timedelta(days=1)
+        fim_periodo = data_final + timedelta(days=1)
+        mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
+        dataframe_final = dataframe.loc[mask]
+    if positivo:
+        mask2 = (dataframe['classificacao'] > 0)
+        dataframe_final = dataframe_final.loc[mask2]
+    if negativo:
+        mask2 = (dataframe['classificacao'] < 0)
+        dataframe_final = dataframe_final.loc[mask2]
     query_comum = ''
     if positivo:
         query_comum += '& classificacao > 0 '
@@ -37,10 +50,10 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict, titulo: str,
     if candidato_unico:
         query_comum += '& mais_de_um_candidato == 0'
     df = pandas.DataFrame(columns=['semana', 'candidato', 'quantidade'])
-    semanas_analise = dataframe['semana_analise'].unique()
+    semanas_analise = dataframe_final['semana_analise'].unique()
     for semana in semanas_analise:
         for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'semana_analise == {semana} & {candidato} == 1 {query_comum}')
+            df2 = dataframe_final.query(f'semana_analise == {semana} & {candidato} == 1 {query_comum}')
             quantidade = len(df2.index)
             df = pandas.concat([df, pandas.DataFrame.from_records([{
                 'semana': semana,
@@ -61,7 +74,19 @@ def mostrar_citacoes_por_semana(dataframe, termos_candidatos: dict, titulo: str,
 
 
 def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict, titulo, positivo=False, negativo=False,
-                             candidato_unico=False) -> None:
+                             candidato_unico=False, data_inicial=None, data_final=None) -> None:
+    dataframe_final = dataframe
+    if data_inicial is not None:
+        inicio_periodo = data_inicial - timedelta(days=1)
+        fim_periodo = data_final + timedelta(days=1)
+        mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
+        dataframe_final = dataframe.loc[mask]
+    if positivo:
+        mask2 = (dataframe['classificacao'] > 0)
+        dataframe_final = dataframe_final.loc[mask2]
+    if negativo:
+        mask2 = (dataframe['classificacao'] < 0)
+        dataframe_final = dataframe_final.loc[mask2]
     query_comum = ''
     if positivo:
         query_comum += '& classificacao > 0 '
@@ -70,16 +95,57 @@ def mostrar_citacoes_por_dia(dataframe, termos_candidatos: dict, titulo, positiv
     if candidato_unico:
         query_comum += '& mais_de_um_candidato == 0'
     df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
-    dias_analise = dataframe['dia'].astype(str).unique()
+    dias_analise = dataframe_final['dia'].astype(str).unique()
     for dia in dias_analise:
         for candidato in termos_candidatos.keys():
-            df2 = dataframe.query(f'dia == "{dia}" & {candidato} == 1 {query_comum}')
+            df2 = dataframe_final.query(f'dia == "{dia}" & {candidato} == 1 {query_comum}')
             quantidade = len(df2.index)
             df = pandas.concat([df, pandas.DataFrame.from_records([{
                 'dia': dia,
                 'candidato': candidato,
                 'quantidade': quantidade
             }])])
+    df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
+    df3.plot(figsize=(20, 10),
+             lw=3,
+             kind='line',
+             style='s:',
+             title=titulo)
+    plt.xlabel('Dia')
+    plt.ylabel('Número de citações')
+    plt.legend(title='Candidato', bbox_to_anchor=(1, 1))
+    plt.show()
+
+
+def mostrar_citacoes_por_dia_candidato(dataframe, candidato: str, titulo: str, positivo=False, negativo=False, data_inicial=None, data_final=None) -> None:
+    dataframe_final = dataframe
+    if data_inicial is not None:
+        inicio_periodo = data_inicial - timedelta(days=1)
+        fim_periodo = data_final + timedelta(days=1)
+        mask = (dataframe['data_tweet'] > inicio_periodo) & (dataframe['data_tweet'] < fim_periodo)
+        dataframe_final = dataframe.loc[mask]
+    if positivo:
+        mask2 = (dataframe['classificacao'] > 0)
+        dataframe_final = dataframe_final.loc[mask2]
+    if negativo:
+        mask2 = (dataframe['classificacao'] < 0)
+        dataframe_final = dataframe_final.loc[mask2]
+    query_comum = '& mais_de_um_candidato == 0 '
+    if positivo:
+        query_comum += '& classificacao > 0 '
+    if negativo:
+        query_comum += '& classificacao < 0 '
+    df = pandas.DataFrame(columns=['dia', 'candidato', 'quantidade'])
+    dias_analise = dataframe_final['dia'].astype(str).unique()
+    for dia in dias_analise:
+        df2 = dataframe_final.query(f'dia == "{dia}" & {candidato} == 1 {query_comum}')
+        quantidade = len(df2.index)
+        df = pandas.concat([df, pandas.DataFrame.from_records([{
+            'dia': dia,
+            'candidato': candidato,
+            'quantidade': quantidade
+        }])])
+
     df3 = df.pivot(index='dia', columns='candidato', values='quantidade')
     df3.plot(figsize=(20, 10),
              lw=3,
@@ -259,23 +325,6 @@ def mostrar_volumetria_classificacao_geral(dataframe, termo_candidatos: dict, ti
               shadow=True)
     chart.set_title(titulo)
     plt.legend(title="Sentimento")
-    plt.show()
-
-
-def mostrar_evolucao_classificacao(dataframe, nome_candidato: str, titulo: str, positivo=False, negativo=False) -> None:
-    query_comum = ''
-    if positivo:
-        query_comum = '& classificacao > 0'
-    if negativo:
-        query_comum = '& classificacao < 0'
-    semanas_analise = dataframe['semana_analise'].astype(str).unique()
-    mencoes_positivas = []
-    for semana in semanas_analise:
-        df_mencoes = dataframe.query(f'semana_analise == {semana} & {nome_candidato} == 1 & mais_de_um_candidato == 0 '
-                                     f'{query_comum}')
-        mencoes_positivas.append(len(df_mencoes.index))
-    plt.plot(semanas_analise, mencoes_positivas)
-    plt.title(titulo)
     plt.show()
 
 

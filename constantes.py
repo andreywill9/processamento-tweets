@@ -647,6 +647,14 @@ inicio_segundo_turno = datetime.datetime(year=2022, month=10, day=3)
 
 fim_segundo_turno = datetime.datetime(year=2022, month=10, day=29)
 
+inicio_debate_globo_primeiro_turno = datetime.datetime(year=2022, month=9, day=25)
+
+fim_debate_globo_primeiro_turno = datetime.datetime(year=2022, month=10, day=1)
+
+inicio_debate_globo_segundo_turno = datetime.datetime(year=2022, month=10, day=23)
+
+fim_debate_globo_segundo_turno = datetime.datetime(year=2022, month=10, day=29)
+
 stopwords = nltk.corpus.stopwords.words("portuguese")
 palavras_irrelevantes = [*punctuation] + stopwords
 token_pontuacao = tokenize.WordPunctTokenizer()
